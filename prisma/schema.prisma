@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  
+  progress  UserProgress[]
+  attempts  QuizAttempt[]
+}
+
+model Section {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  order       Int
+  
+  content     Content[]
+  quizzes     Quiz[]
+  progress    UserProgress[]
+}
+
+model Content {
+  id        Int     @id @default(autoincrement())
+  sectionId Int
+  title     String
+  body      String
+  type      String  // "text", "image", "video"
+  order     Int
+  
+  section   Section @relation(fields: [sectionId], references: [id])
+}
+
+model Quiz {
+  id         Int      @id @default(autoincrement())
+  sectionId  Int?     // null αν είναι επαναληπτικό τεστ
+  question   String
+  optionA    String
+  optionB    String
+  optionC    String
+  optionD    String
+  correct    String   // "A", "B", "C", "D"
+  difficulty String   // "easy", "medium", "hard"
+  
+  section    Section?  @relation(fields: [sectionId], references: [id])
+  attempts   QuizAttempt[]
+}
+
+model UserProgress {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  sectionId   Int
+  completed   Boolean  @default(false)
+  score       Float?
+  visitCount  Int      @default(0)
+  lastVisited DateTime @default(now())
+  
+  user        User    @relation(fields: [userId], references: [id])
+  section     Section @relation(fields: [sectionId], references: [id])
+  
+  @@unique([userId, sectionId])
+}
+
+model QuizAttempt {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  quizId     Int
+  answer     String
+  correct    Boolean
+  createdAt  DateTime @default(now())
+  
+  user       User @relation(fields: [userId], references: [id])
+  quiz       Quiz @relation(fields: [quizId], references: [id])
+}
