@@ -49,6 +49,7 @@ model Quiz {
   optionD    String
   correct    String   // "A", "B", "C", "D"
   difficulty String   // "easy", "medium", "hard"
+  reviewTest Int?
   
   section    Section?  @relation(fields: [sectionId], references: [id])
   attempts   QuizAttempt[]

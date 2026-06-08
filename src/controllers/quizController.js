@@ -3,9 +3,39 @@ const prisma = require('../prisma')
 const getQuizzesBySection = async (req, res) => {
   try {
     const { sectionId } = req.params
+    const { difficulty } = req.query
+
+    // Παίρνουμε το score του χρήστη για αυτή την ενότητα
+    const progress = await prisma.userProgress.findUnique({
+      where: {
+        userId_sectionId: {
+          userId: req.userId,
+          sectionId: parseInt(sectionId)
+        }
+      }
+    })
+
+    // Αν ζητήθηκε συγκεκριμένη δυσκολία, ελέγχουμε αν επιτρέπεται
+    if (difficulty === 'medium' && (!progress?.score || progress.score < 60)) {
+      return res.status(403).json({ 
+        message: 'Πρέπει να ολοκληρώσεις πρώτα το easy επίπεδο με score >= 60%' 
+      })
+    }
+
+    if (difficulty === 'hard' && (!progress?.score || progress.score < 80)) {
+      return res.status(403).json({ 
+        message: 'Πρέπει να ολοκληρώσεις πρώτα το medium επίπεδο με score >= 80%' 
+      })
+    }
+
+    // Φιλτράρουμε βάσει difficulty αν δόθηκε, αλλιώς επιστρέφουμε easy
+    const difficultyFilter = difficulty || 'easy'
 
     const quizzes = await prisma.quiz.findMany({
-      where: { sectionId: parseInt(sectionId) },
+      where: { 
+        sectionId: parseInt(sectionId),
+        difficulty: difficultyFilter
+      },
       select: {
         id: true,
         question: true,
@@ -14,7 +44,6 @@ const getQuizzesBySection = async (req, res) => {
         optionC: true,
         optionD: true,
         difficulty: true
-        // δεν στέλνουμε το correct για να μην το βλέπει ο χρήστης!
       }
     })
 
@@ -110,4 +139,27 @@ const submitAnswer = async (req, res) => {
   }
 }
 
-module.exports = { getQuizzesBySection, getReviewQuizzes, submitAnswer }
+const getReviewTest = async (req, res) => {
+  try {
+    const { testNumber } = req.params
+
+    const quizzes = await prisma.quiz.findMany({
+      where: { reviewTest: parseInt(testNumber) },
+      select: {
+        id: true,
+        question: true,
+        optionA: true,
+        optionB: true,
+        optionC: true,
+        optionD: true,
+        difficulty: true
+      }
+    })
+
+    res.json(quizzes)
+  } catch (error) {
+    res.status(500).json({ message: 'Σφάλμα στον server', error: error.message })
+  }
+}
+
+module.exports = { getQuizzesBySection, getReviewQuizzes, submitAnswer, getReviewTest }
