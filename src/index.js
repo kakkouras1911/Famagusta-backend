@@ -7,6 +7,7 @@ const sectionRoutes = require('./routes/sections')
 const quizRoutes = require('./routes/quiz')
 const progressRoutes = require('./routes/progress')
 const adaptiveRoutes = require('./routes/adaptive')
+const adminRoutes = require('./routes/admin')
 
 const app = express()
 
@@ -18,6 +19,7 @@ app.use('/api/sections', sectionRoutes)
 app.use('/api/quizzes', quizRoutes)
 app.use('/api/progress', progressRoutes)
 app.use('/api/adaptive', adaptiveRoutes)
+app.use('/api/admin', adminRoutes)
 
 app.get('/', (req, res) => {
   res.json({ message: 'Famagusta API is running!' })

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
+const prisma = require('../prisma')
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization
 
@@ -9,10 +10,21 @@ const authMiddleware = (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1]
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    console.log('Decoded userId:', decoded.userId)
 
-    req.userId = decoded.userId
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId }
+    })
+    console.log('Found user:', user)
+
+    if (!user) {
+      return res.status(401).json({ message: 'Ο χρήστης δεν βρέθηκε' })
+    }
+
+    req.userId = user.id
+    req.userRole = user.role
+    console.log('User role:', user.role)
 
     next()
 

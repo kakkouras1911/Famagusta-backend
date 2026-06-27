@@ -11,6 +11,7 @@ model User {
   name      String
   email     String   @unique
   password  String
+  role      String   @default("USER")
   createdAt DateTime @default(now())
   
   progress  UserProgress[]
@@ -21,6 +22,7 @@ model Section {
   id          Int      @id @default(autoincrement())
   title       String
   description String
+  imageUrl    String?
   order       Int
   
   content     Content[]
